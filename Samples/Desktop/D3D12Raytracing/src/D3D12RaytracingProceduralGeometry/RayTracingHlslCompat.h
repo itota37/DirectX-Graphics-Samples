@@ -131,6 +131,11 @@ struct Vertex
     XMFLOAT3 normal;
 };
 
+struct Vertex2
+{
+    XMFLOAT4 position;
+};
+
 
 // Ray types traced in this sample.
 namespace RayType {

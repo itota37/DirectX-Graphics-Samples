@@ -83,6 +83,9 @@ private:
     PrimitiveConstantBuffer m_planeMaterialCB;
     PrimitiveConstantBuffer m_aabbMaterialCB[IntersectionShaderType::TotalPrimitiveCount];
 
+    // Per AABB buffers
+    D3DBuffer m_aabbObjectVertexBuffers[IntersectionShaderType::Count];
+
     // Geometry
     D3DBuffer m_indexBuffer;
     D3DBuffer m_vertexBuffer;
@@ -145,6 +148,7 @@ private:
     void CreateRaytracingOutputResource();
     void BuildProceduralGeometryAABBs();
     void BuildGeometry();
+    void BuildAABBVertexBuffers();
     void BuildPlaneGeometry();
     void BuildGeometryDescsForBottomLevelAS(std::array<std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>, BottomLevelASType::Count>& geometryDescs);
     template <class InstanceDescType, class BLASPtrType>

@@ -59,12 +59,24 @@ namespace LocalRootSignature {
             enum Enum {
                 MaterialConstant = 0,
                 GeometryIndex,
+                VertexBuffers,
                 Count
             };
         }
         struct RootArguments {
             PrimitiveConstantBuffer materialCb;
             PrimitiveInstanceConstantBuffer aabbCB;
+            UINT32 padding; // 4byte padding to align on 8 byte boundary 
+                            // since ShaderIdentifierSize is 12 and next GPU
+                            // handle variable requires 8 byte alignement.
+            // Now we specify a GPU handle to the vertex buffer.
+            // However instead of using the handle struct with 8 byte
+            // ptr itself, we use 4 byte variables to avoid alignment
+            // of the whole RootArguments struct to 8 bytes. This is because
+            // it would throw alignment off in the final shader record
+            // with 12 byte shaderidentifiersize up front.
+             UINT32 vertexBufferGPUHandle;   
+             UINT32 padding2;
         };
     }
 }

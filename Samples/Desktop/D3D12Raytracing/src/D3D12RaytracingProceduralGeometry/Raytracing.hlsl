@@ -36,6 +36,7 @@ StructuredBuffer<Vertex> g_vertices : register(t2, space0);
 StructuredBuffer<PrimitiveInstancePerFrameBuffer> g_AABBPrimitiveAttributes : register(t3, space0);
 ConstantBuffer<PrimitiveConstantBuffer> l_materialCB : register(b1);
 ConstantBuffer<PrimitiveInstanceConstantBuffer> l_aabbCB: register(b2);
+StructuredBuffer<Vertex2> l_aabbVB : register(t4, space0);
 
 
 //***************************************************************************
@@ -193,7 +194,7 @@ void MyClosestHitShader_Triangle(inout RayPayload rayPayload, in BuiltInTriangle
 
     // Retrieve corresponding vertex normals for the triangle vertices.
     float3 triangleNormal = g_vertices[indices[0]].normal;
-
+    
     // PERFORMANCE TIP: it is recommended to avoid values carry over across TraceRay() calls. 
     // Therefore, in cases like retrieving HitWorldPosition(), it is recomputed every time.
 
@@ -261,6 +262,7 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
     color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002*t*t*t));
 
     rayPayload.color = color;
+    rayPayload.color = l_aabbVB[0].position;
 }
 
 //***************************************************************************

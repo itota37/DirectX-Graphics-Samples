@@ -396,10 +396,15 @@ void D3D12RaytracingProceduralGeometry::CreateRootSignatures()
 
         // AABB geometry
         {
+
+            CD3DX12_DESCRIPTOR_RANGE ranges[1]; // Perfomance TIP: Order from most frequent to least frequent.
+            ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);  // 1 static vertex buffer
+
             namespace RootSignatureSlots = LocalRootSignature::AABB::Slot;
             CD3DX12_ROOT_PARAMETER rootParameters[RootSignatureSlots::Count];
             rootParameters[RootSignatureSlots::MaterialConstant].InitAsConstants(SizeOfInUint32(PrimitiveConstantBuffer), 1);
             rootParameters[RootSignatureSlots::GeometryIndex].InitAsConstants(SizeOfInUint32(PrimitiveInstanceConstantBuffer), 2);
+            rootParameters[RootSignatureSlots::VertexBuffers].InitAsDescriptorTable(1, &ranges[0]);
 
             CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
@@ -624,7 +629,8 @@ void D3D12RaytracingProceduralGeometry::CreateDescriptorHeap()
     // 2 - vertex and index  buffer SRVs
     // 1 - raytracing output texture SRV
     // 3 - 2x bottom and a top level acceleration structure fallback wrapped pointer UAVs
-    descriptorHeapDesc.NumDescriptors = 6;
+    // 3 - 3x VB for each intersection shader type AABB
+    descriptorHeapDesc.NumDescriptors = 6 + IntersectionShaderType::Count;
     descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     descriptorHeapDesc.NodeMask = 0;
@@ -723,10 +729,31 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
     ThrowIfFalse(descriptorIndexVB == descriptorIndexIB + 1, L"Vertex Buffer descriptor index must follow that of Index Buffer descriptor index");
 }
 
+void D3D12RaytracingProceduralGeometry::BuildAABBVertexBuffers()
+{
+    auto device = m_deviceResources->GetD3DDevice();
+
+    Vertex2 vertices[IntersectionShaderType::Count] =
+    {
+        { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+        { XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+        { XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)},
+    };
+
+    // Vertex buffer is passed to the shader as a descriptor range.
+    for (UINT i = 0; i < IntersectionShaderType::Count; i++)
+    {
+        AllocateUploadBuffer(device, &vertices[i], sizeof(vertices[0]), &m_aabbObjectVertexBuffers[i].resource);
+        CreateBufferSRV(&m_aabbObjectVertexBuffers[i], 1, sizeof(vertices[0]));
+    }
+}
+
+
 // Build geometry used in the sample.
 void D3D12RaytracingProceduralGeometry::BuildGeometry()
 {
     BuildProceduralGeometryAABBs();
+    BuildAABBVertexBuffers();
     BuildPlaneGeometry();
 }
 
@@ -1216,7 +1243,8 @@ void D3D12RaytracingProceduralGeometry::BuildShaderTables()
                     rootArgs.materialCb = m_aabbMaterialCB[instanceIndex];
                     rootArgs.aabbCB.instanceIndex = instanceIndex;
                     rootArgs.aabbCB.primitiveType = primitiveIndex;
-                    
+                    memcpy(&rootArgs.vertexBufferGPUHandle, &m_aabbObjectVertexBuffers[iShader].gpuDescriptorHandle, sizeof(m_aabbObjectVertexBuffers[iShader].gpuDescriptorHandle));
+
                     // Ray types.
                     for (UINT r = 0; r < RayType::Count; r++)
                     {

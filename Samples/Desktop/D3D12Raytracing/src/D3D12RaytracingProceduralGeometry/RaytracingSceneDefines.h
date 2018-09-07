@@ -66,6 +66,7 @@ namespace LocalRootSignature {
         struct RootArguments {
             PrimitiveConstantBuffer materialCb;
             PrimitiveInstanceConstantBuffer aabbCB;
+            // WARNING: For DXR remove the first padding as ShaderIDsize is 16.
             UINT32 padding; // 4byte padding to align on 8 byte boundary 
                             // since ShaderIdentifierSize is 12 and next GPU
                             // handle variable requires 8 byte alignement.

@@ -262,7 +262,7 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
     color = lerp(color, BackgroundColor, 1.0 - exp(-0.000002*t*t*t));
 
     rayPayload.color = color;
-    rayPayload.color = l_aabbVB[0].position;
+    rayPayload.color = l_aabbVB[1].position;
 }
 
 //***************************************************************************

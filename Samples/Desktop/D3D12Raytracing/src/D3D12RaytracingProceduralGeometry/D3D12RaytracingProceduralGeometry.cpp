@@ -732,7 +732,27 @@ void D3D12RaytracingProceduralGeometry::BuildPlaneGeometry()
 void D3D12RaytracingProceduralGeometry::BuildAABBVertexBuffers()
 {
     auto device = m_deviceResources->GetD3DDevice();
+#if 1
+    Vertex2 vertices[2 * IntersectionShaderType::Count] =
+    {
+        { XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
+    { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
 
+    { XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
+    { XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+
+    { XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
+    { XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
+
+    };
+
+    // Vertex buffer is passed to the shader as a descriptor range.
+    for (UINT i = 0; i < IntersectionShaderType::Count; i++)
+    {
+        AllocateUploadBuffer(device, &vertices[2 * i], 2 * sizeof(vertices[0]), &m_aabbObjectVertexBuffers[i].resource);
+        CreateBufferSRV(&m_aabbObjectVertexBuffers[i], 2, sizeof(vertices[0]));
+    }
+#else
     Vertex2 vertices[IntersectionShaderType::Count] =
     {
         { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
@@ -746,6 +766,7 @@ void D3D12RaytracingProceduralGeometry::BuildAABBVertexBuffers()
         AllocateUploadBuffer(device, &vertices[i], sizeof(vertices[0]), &m_aabbObjectVertexBuffers[i].resource);
         CreateBufferSRV(&m_aabbObjectVertexBuffers[i], 1, sizeof(vertices[0]));
     }
+#endif
 }
 
 

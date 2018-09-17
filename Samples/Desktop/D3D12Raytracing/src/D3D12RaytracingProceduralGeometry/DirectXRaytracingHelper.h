@@ -318,3 +318,10 @@ inline void StoreXMMatrixAsTransform3x4
     XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&transform3x4[4]), mT.r[1]);
     XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&transform3x4[8]), mT.r[2]);
 }
+
+float NumMRaysPerSecond(UINT width, UINT height, float dispatchRaysTimeMs)
+{
+    float resolutionMRays = static_cast<float>(width * height);
+    float raytracingTimeInSeconds = 0.001f * dispatchRaysTimeMs;
+    return resolutionMRays / (raytracingTimeInSeconds * static_cast<float>(1e6));
+}
